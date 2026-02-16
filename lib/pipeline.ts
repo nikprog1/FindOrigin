@@ -1,6 +1,8 @@
 import { sendMessage, isTelegramPostUrl } from "./telegram";
 import { getTextFromTelegramPost } from "./getPostText";
 import { extractEntities } from "./entities";
+import { searchSources } from "./search";
+import { rankSourcesWithAI, type RankedSource } from "./ai";
 
 const HELP_TEXT = `FindOrigin — бот для поиска источников информации.
 
@@ -8,15 +10,14 @@ const HELP_TEXT = `FindOrigin — бот для поиска источнико�
 
 Если у вас ссылка на пост в Telegram — пришлите, пожалуйста, текст поста отдельным сообщением или перешлите пост сюда (по ссылке t.me я не могу прочитать содержимое).`;
 
-function formatEntities(entities: ReturnType<typeof extractEntities>): string {
-  const parts: string[] = [];
-  if (entities.claims.length) parts.push("Утверждения: " + entities.claims.slice(0, 3).join(" | "));
-  if (entities.dates.length) parts.push("Даты: " + entities.dates.join(", "));
-  if (entities.numbers.length) parts.push("Числа: " + entities.numbers.slice(0, 5).join(", "));
-  if (entities.names.length) parts.push("Имена: " + entities.names.slice(0, 5).join(", "));
-  if (entities.links.length) parts.push("Ссылки: " + entities.links.join(", "));
-  parts.push("Поисковый запрос: " + entities.searchQuery.slice(0, 150));
-  return parts.filter(Boolean).join("\n\n");
+function formatRankedSources(sources: RankedSource[]): string {
+  if (sources.length === 0) return "Источники не найдены.";
+  return sources
+    .map(
+      (s, i) =>
+        `${i + 1}. ${s.title}\n${s.url}\nУверенность: ${s.confidence}%.${s.reason ? ` ${s.reason}` : ""}`
+    )
+    .join("\n\n");
 }
 
 export async function runPipeline(chatId: number, input: string): Promise<void> {
@@ -48,8 +49,9 @@ export async function runPipeline(chatId: number, input: string): Promise<void> 
 
   try {
     const entities = extractEntities(text);
-    const message =
-      "Выполнено до этапа поиска. Извлечённые сущности:\n\n" + formatEntities(entities);
+    const candidates = await searchSources(entities);
+    const ranked = await rankSourcesWithAI(text, candidates);
+    const message = formatRankedSources(ranked);
     await sendMessage(chatId, message);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Ошибка при обработке текста.";
