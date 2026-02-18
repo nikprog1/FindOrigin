@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import { isValid } from "@tma.js/init-data-node";
 
 /**
  * Проверка подписи initData от Telegram WebApp.
@@ -6,19 +6,5 @@ import crypto from "crypto";
  */
 export function validateTelegramWebAppInitData(initData: string, botToken: string): boolean {
   if (!initData?.trim() || !botToken) return false;
-
-  const pairs = initData.split("&").map((part) => {
-    const i = part.indexOf("=");
-    return i === -1 ? [part, ""] as const : [part.slice(0, i), part.slice(i + 1)] as const;
-  });
-  const hashEntry = pairs.find(([k]) => k === "hash");
-  if (!hashEntry) return false;
-  const hash = hashEntry[1];
-  const rest = pairs.filter(([k]) => k !== "hash").sort(([a], [b]) => a.localeCompare(b));
-  const dataCheckString = rest.map(([k, v]) => `${k}=${v}`).join("\n");
-
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
-  const calculatedHash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
-
-  return calculatedHash === hash;
+  return isValid(initData, botToken, { expiresIn: 0 });
 }
