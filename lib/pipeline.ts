@@ -20,6 +20,13 @@ function formatRankedSources(sources: RankedSource[]): string {
     .join("\n\n");
 }
 
+/** Возвращает до 3 ранжированных источников по тексту (для чата и Mini App API). */
+export async function getRankedSources(text: string): Promise<RankedSource[]> {
+  const entities = extractEntities(text);
+  const candidates = await searchSources(entities);
+  return rankSourcesWithAI(text, candidates);
+}
+
 export async function runPipeline(chatId: number, input: string): Promise<void> {
   const trimmed = input?.trim();
   if (!trimmed) {
@@ -48,9 +55,7 @@ export async function runPipeline(chatId: number, input: string): Promise<void> 
   await sendMessage(chatId, "Обрабатываю текст…");
 
   try {
-    const entities = extractEntities(text);
-    const candidates = await searchSources(entities);
-    const ranked = await rankSourcesWithAI(text, candidates);
+    const ranked = await getRankedSources(text);
     const message = formatRankedSources(ranked);
     await sendMessage(chatId, message);
   } catch (err) {

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "webhook:set": "node scripts/set-webhook.js"
+    "webhook:set": "node scripts/set-webhook.js",
+    "menu:set": "node scripts/set-menu-button.js"
   },
   "dependencies": {
     "next": "^14.2.0",
