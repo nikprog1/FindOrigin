@@ -6,11 +6,11 @@
 const path = require("path");
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.VERCEL_URL;
 
 if (!BOT_TOKEN) {
-  console.error("Укажите BOT_TOKEN в .env");
+  console.error("Укажите BOT_TOKEN или TELEGRAM_BOT_TOKEN в .env");
   process.exit(1);
 }
 

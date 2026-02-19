@@ -1,8 +1,8 @@
 const TELEGRAM_API = "https://api.telegram.org";
 
 export function getBotUrl(): string {
-  const token = process.env.BOT_TOKEN;
-  if (!token) throw new Error("BOT_TOKEN is not set");
+  const token = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("BOT_TOKEN или TELEGRAM_BOT_TOKEN не задан");
   return `${TELEGRAM_API}/bot${token}`;
 }
 

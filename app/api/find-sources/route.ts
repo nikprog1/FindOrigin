@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const initData = typeof body.initData === "string" ? body.initData : "";
   const skipValidation = process.env.SKIP_INITDATA_VALIDATION === "true";
   if (initData && !skipValidation) {
-    const botToken = process.env.BOT_TOKEN;
+    const botToken = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken || !validateTelegramWebAppInitData(initData, botToken)) {
       return NextResponse.json({ error: "Недействительные данные Mini App" }, { status: 401 });
     }
